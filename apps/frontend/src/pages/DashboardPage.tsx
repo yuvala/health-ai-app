@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import type { LabResultInput } from "@health-ai/shared";
 import { LabResultsTable } from "../components/LabResultsTable";
-import { listLabResults } from "../services/labResults";
 import type { LabResultRow } from "../types/db";
 import { analyzeLabs } from "../services/ai";
+import { listLabResults } from "../services/labResults";
+import { Button } from "../components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 
 export const DashboardPage = () => {
   const [rows, setRows] = useState<LabResultRow[]>([]);
@@ -30,10 +32,7 @@ export const DashboardPage = () => {
     refresh();
   }, []);
 
-  const selectedRows = useMemo(
-    () => rows.filter((r) => selectedIds.includes(r.id)),
-    [rows, selectedIds]
-  );
+  const selectedRows = useMemo(() => rows.filter((r) => selectedIds.includes(r.id)), [rows, selectedIds]);
 
   const toggle = (id: string) => {
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -62,25 +61,36 @@ export const DashboardPage = () => {
   };
 
   return (
-    <>
-      <div className="card">
-        <h2>Dashboard</h2>
-        <p>Track your labs and get educational AI explanations.</p>
-        <button className="btn secondary" onClick={refresh} disabled={loading}>
-          {loading ? "Refreshing..." : "Refresh"}
-        </button>
-      </div>
+    <div className="space-y-4">
+      <Card className="border-white/70 bg-card/90">
+        <CardHeader>
+          <CardTitle>Dashboard</CardTitle>
+          <CardDescription>Track labs and get educational AI explanations.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-wrap items-center gap-3">
+          <Button variant="secondary" onClick={refresh} disabled={loading}>
+            {loading ? "Refreshing..." : "Refresh"}
+          </Button>
+          <Button onClick={explain} disabled={selectedRows.length === 0 || aiLoading}>
+            {aiLoading ? "Analyzing..." : "Explain my results"}
+          </Button>
+        </CardContent>
+      </Card>
 
-      {error ? <p style={{ color: "crimson" }}>{error}</p> : null}
+      {error ? <p className="text-sm font-semibold text-danger">{error}</p> : null}
+
       <LabResultsTable rows={rows} selectedIds={selectedIds} onToggle={toggle} />
-      <button className="btn" disabled={selectedRows.length === 0 || aiLoading} onClick={explain}>
-        {aiLoading ? "Analyzing..." : "Explain my results"}
-      </button>
+
       {insight ? (
-        <pre className="card" style={{ whiteSpace: "pre-wrap", marginTop: 12 }}>
-          {insight}
-        </pre>
+        <Card className="border-primary/20 bg-card/95">
+          <CardHeader>
+            <CardTitle>AI Explanation</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <pre className="whitespace-pre-wrap text-sm leading-6 text-foreground">{insight}</pre>
+          </CardContent>
+        </Card>
       ) : null}
-    </>
+    </div>
   );
 };

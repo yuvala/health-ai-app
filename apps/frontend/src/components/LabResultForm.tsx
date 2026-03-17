@@ -1,5 +1,9 @@
 import { useState } from "react";
 import { createLabResult } from "../services/labResults";
+import { Button } from "./ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Input } from "./ui/input";
+import { Textarea } from "./ui/textarea";
 
 type Props = {
   onSaved?: () => void;
@@ -34,6 +38,7 @@ export const LabResultForm = ({ onSaved }: Props) => {
         measured_at: new Date(form.measured_at).toISOString(),
         notes: form.notes || undefined
       });
+
       setForm({
         test_name: "",
         value: "",
@@ -51,51 +56,57 @@ export const LabResultForm = ({ onSaved }: Props) => {
   };
 
   return (
-    <form className="card" onSubmit={onSubmit}>
-      <h3>Add Lab Result</h3>
-      <div className="row">
-        <input
-          required
-          placeholder="Test name (e.g. Hemoglobin)"
-          value={form.test_name}
-          onChange={(e) => onChange("test_name", e.target.value)}
-        />
-        <input
-          required
-          type="number"
-          step="any"
-          placeholder="Value"
-          value={form.value}
-          onChange={(e) => onChange("value", e.target.value)}
-        />
-        <input required placeholder="Unit" value={form.unit} onChange={(e) => onChange("unit", e.target.value)} />
-      </div>
-      <div className="row" style={{ marginTop: 10 }}>
-        <input
-          placeholder="Reference range (e.g. 13-17)"
-          value={form.reference_range}
-          onChange={(e) => onChange("reference_range", e.target.value)}
-        />
-        <input
-          required
-          type="date"
-          value={form.measured_at}
-          onChange={(e) => onChange("measured_at", e.target.value)}
-        />
-      </div>
-      <div style={{ marginTop: 10 }}>
-        <textarea
-          placeholder="Notes (optional)"
-          value={form.notes}
-          onChange={(e) => onChange("notes", e.target.value)}
-          rows={3}
-          style={{ width: "100%" }}
-        />
-      </div>
-      {error ? <p style={{ color: "crimson" }}>{error}</p> : null}
-      <button className="btn" disabled={saving} type="submit">
-        {saving ? "Saving..." : "Save Result"}
-      </button>
-    </form>
+    <Card>
+      <CardHeader>
+        <CardTitle>Add Lab Result</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={onSubmit} className="space-y-4">
+          <div className="grid gap-3 sm:grid-cols-3">
+            <Input
+              required
+              placeholder="Test name"
+              value={form.test_name}
+              onChange={(e) => onChange("test_name", e.target.value)}
+            />
+            <Input
+              required
+              type="number"
+              step="any"
+              placeholder="Value"
+              value={form.value}
+              onChange={(e) => onChange("value", e.target.value)}
+            />
+            <Input required placeholder="Unit" value={form.unit} onChange={(e) => onChange("unit", e.target.value)} />
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Input
+              placeholder="Reference range (e.g. 13-17)"
+              value={form.reference_range}
+              onChange={(e) => onChange("reference_range", e.target.value)}
+            />
+            <Input
+              required
+              type="date"
+              value={form.measured_at}
+              onChange={(e) => onChange("measured_at", e.target.value)}
+            />
+          </div>
+
+          <Textarea
+            placeholder="Notes (optional)"
+            value={form.notes}
+            onChange={(e) => onChange("notes", e.target.value)}
+          />
+
+          {error ? <p className="text-sm font-semibold text-danger">{error}</p> : null}
+
+          <Button disabled={saving} type="submit">
+            {saving ? "Saving..." : "Save Result"}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 };

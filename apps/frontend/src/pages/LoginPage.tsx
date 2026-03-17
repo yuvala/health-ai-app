@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { Navigate } from "react-router-dom";
-import { signIn, signUp } from "../services/auth";
 import { useAuth } from "../hooks/useAuth";
+import { signIn, signUp } from "../services/auth";
+import { Button } from "../components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
+import { Input } from "../components/ui/input";
 
 export const LoginPage = () => {
   const { user, loading } = useAuth();
@@ -20,62 +23,74 @@ export const LoginPage = () => {
     e.preventDefault();
     setError(null);
     setStatus(null);
+
     const res = isSignup ? await signUp(email, password, fullName) : await signIn(email, password);
     if (res.error) {
       setError(res.error.message);
       return;
     }
+
     if (isSignup) {
       setStatus("Signup successful. Check your email if confirmation is enabled.");
     }
   };
 
   return (
-    <div className="container" style={{ maxWidth: 460, marginTop: 60 }}>
-      <div className="card">
-        <h2>{isSignup ? "Sign Up" : "Login"}</h2>
-        <form onSubmit={submit}>
-          {isSignup ? (
-            <div style={{ marginBottom: 10 }}>
-              <input
+    <div className="mx-auto grid min-h-[78vh] w-full max-w-6xl items-center gap-6 px-4 sm:px-6 lg:grid-cols-2 lg:px-8">
+      <div className="hidden lg:block">
+        <h1 className="text-4xl font-bold tracking-tight">Health Journey, one clear dashboard.</h1>
+        <p className="mt-4 max-w-md text-muted-foreground">
+          Track labs, medications and documents in one responsive workspace designed for personal use.
+        </p>
+      </div>
+
+      <Card className="w-full border-white/70 bg-card/95 shadow-xl backdrop-blur">
+        <CardHeader>
+          <CardTitle>{isSignup ? "Create account" : "Welcome back"}</CardTitle>
+          <CardDescription>
+            {isSignup ? "Start your personal health workspace." : "Sign in to continue."}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={submit} className="space-y-3">
+            {isSignup ? (
+              <Input
                 required
                 placeholder="Full name"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                style={{ width: "100%" }}
               />
-            </div>
-          ) : null}
-          <div style={{ marginBottom: 10 }}>
-            <input
+            ) : null}
+
+            <Input
               required
               type="email"
               placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              style={{ width: "100%" }}
             />
-          </div>
-          <div style={{ marginBottom: 10 }}>
-            <input
+
+            <Input
               required
               type="password"
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              style={{ width: "100%" }}
             />
-          </div>
-          {error ? <p style={{ color: "crimson" }}>{error}</p> : null}
-          {status ? <p style={{ color: "green" }}>{status}</p> : null}
-          <button className="btn" type="submit">
-            {isSignup ? "Create account" : "Login"}
-          </button>
-        </form>
-        <button className="btn secondary" style={{ marginTop: 10 }} onClick={() => setIsSignup((v) => !v)}>
-          {isSignup ? "Have an account? Login" : "Need an account? Sign up"}
-        </button>
-      </div>
+
+            {error ? <p className="text-sm font-medium text-danger">{error}</p> : null}
+            {status ? <p className="text-sm font-medium text-emerald-700">{status}</p> : null}
+
+            <Button className="w-full" type="submit">
+              {isSignup ? "Create account" : "Login"}
+            </Button>
+          </form>
+
+          <Button variant="ghost" className="mt-3 w-full" onClick={() => setIsSignup((v) => !v)}>
+            {isSignup ? "Have an account? Login" : "Need an account? Sign up"}
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 };

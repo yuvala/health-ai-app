@@ -11,7 +11,7 @@ This is a **web-first** monorepo using `pnpm` workspaces.
 
 ## Tech Stack
 
-- Frontend: React + TypeScript + Vite
+- Frontend: React + TypeScript + Vite + Tailwind CSS + shadcn/ui-style components
 - Backend/BFF: NestJS-style TypeScript API (modular, DTO validation)
 - Auth/DB/Storage: Supabase
 - AI: OpenAI API (backend-only)
@@ -75,10 +75,13 @@ Set values in `apps/backend/.env`:
 - `OPENAI_API_KEY`
 - `OPENAI_MODEL` (example: `gpt-4.1-mini`)
 
-4. Run Supabase SQL migration:
+4. Run Supabase SQL migrations:
 
 - Open Supabase SQL editor
-- Run: `supabase/migrations/0001_init.sql`
+- Run, in order:
+  - `supabase/migrations/0001_init.sql`
+  - `supabase/migrations/0002_documents_storage.sql`
+  - `supabase/migrations/0003_document_extractions.sql`
 
 5. Start apps:
 
@@ -129,3 +132,13 @@ This repository is intentionally minimal and readable:
 - no Docker requirement
 - no AWS dependencies
 - easy to extend to PWA/mobile later
+## Backend Logs
+
+The backend now prints structured JSON logs to the terminal:
+- `startup` log when server starts
+- `http` log for every request (method, path, status, duration, requestId)
+- `error` log for unhandled exceptions with stack trace
+
+Every response includes `x-request-id` so you can correlate frontend/network errors with backend logs.
+
+
