@@ -31,4 +31,13 @@ export class HealthController {
   listDocumentExtractions(@CurrentUser() user: AuthUser) {
     return this.healthService.listDocumentExtractions(user.id);
   }
+
+  @Post("documents/:documentId/approve")
+  approveParsedExtraction(
+    @CurrentUser() user: AuthUser,
+    @Param("documentId", new ParseUUIDPipe({ version: "4" })) documentId: string
+  ) {
+    return this.healthService.approveParsedExtraction(user.id, documentId);
+  }
 }
+

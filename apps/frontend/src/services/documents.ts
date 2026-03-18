@@ -9,6 +9,48 @@ const isObjectMissingError = (message: string): boolean => {
   return normalized.includes("not found") || normalized.includes("no such") || normalized.includes("does not exist");
 };
 
+export type ParsedExtractionResultRow = {
+  testName: string;
+  testCode: string;
+  value: number;
+  unit: string;
+  confidence: number;
+};
+
+export type DocumentExtractionRow = {
+  id: string;
+  document_id: string;
+  status: "queued" | "extracting" | "parsing" | "review_needed" | "completed" | "failed";
+  document_date: string | null;
+  date_confidence: number | null;
+  error_message: string | null;
+  parser_version: string;
+  used_ocr: boolean;
+  parsed_results: ParsedExtractionResultRow[];
+  parsed_results_count: number;
+  extracted_text: string | null;
+  extracted_text_preview: string;
+  documents: {
+    file_name: string;
+    file_type: string;
+    uploaded_at: string;
+  };
+  updated_at: string;
+  created_at: string;
+};
+
+const getSessionAccessToken = async (): Promise<string> => {
+  const {
+    data: { session }
+  } = await supabase.auth.getSession();
+
+  if (!session?.access_token) {
+    throw new Error("Not authenticated");
+  }
+
+  return session.access_token;
+};
+
 export const listDocuments = async (): Promise<DocumentRow[]> => {
   const { data, error } = await supabase
     .from("documents")
@@ -20,18 +62,49 @@ export const listDocuments = async (): Promise<DocumentRow[]> => {
   return data ?? [];
 };
 
+export const listDocumentExtractions = async (): Promise<DocumentExtractionRow[]> => {
+  const accessToken = await getSessionAccessToken();
+  const response = await fetch(`${env.apiBaseUrl}/health/documents/extractions`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`
+    }
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || "Failed to load document extraction statuses");
+  }
+
+  return response.json();
+};
+
+export const approveDocumentExtraction = async (documentId: string) => {
+  const accessToken = await getSessionAccessToken();
+  const response = await fetch(`${env.apiBaseUrl}/health/documents/${documentId}/approve`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`
+    }
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || "Failed to approve parsed extraction");
+  }
+
+  return response.json();
+};
+
 export const uploadDocument = async (file: File) => {
   if (file.type !== "application/pdf") {
     throw new Error("Currently only PDF files are supported.");
   }
 
-  const {
-    data: { session }
-  } = await supabase.auth.getSession();
+  const accessToken = await getSessionAccessToken();
   const userRes = await supabase.auth.getUser();
   const user = userRes.data.user;
 
-  if (!user || !session?.access_token) {
+  if (!user) {
     throw new Error("No authenticated user.");
   }
 
@@ -68,7 +141,7 @@ export const uploadDocument = async (file: File) => {
   const response = await fetch(`${env.apiBaseUrl}/health/documents/${document.id}/process`, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${session.access_token}`
+      Authorization: `Bearer ${accessToken}`
     }
   });
 
@@ -89,6 +162,7 @@ export const deleteDocument = async (document: Pick<DocumentRow, "id" | "file_pa
     throw error;
   }
 };
+
 export const getDocumentViewUrl = async (document: Pick<DocumentRow, "file_path">): Promise<string> => {
   const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(document.file_path, 60);
   if (error || !data?.signedUrl) {
@@ -96,3 +170,8 @@ export const getDocumentViewUrl = async (document: Pick<DocumentRow, "file_path"
   }
   return data.signedUrl;
 };
+
+
+
+
+
